@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Generador de Factura Básica</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .producto-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-light">
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">Generador de Factura Básica</h2>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="server.php" id="facturaForm">
+                        <h4 class="mb-3">Datos del Cliente</h4>
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre del cliente</label>
+                                <input type="text" name="nombre_cliente" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Correo electrónico</label>
+                                <input type="email" name="correo" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Fecha</label>
+                                <input type="date" name="fecha" class="form-control" required>
+                            </div>
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Comentarios</label>
+                                <textarea name="comentarios" class="form-control" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <h4 class="mb-3">Productos</h4>
+                        <div id="productos">
+                            <!-- Productos se agregan aquí -->
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <button type="button" class="btn btn-success" id="agregarProducto">Agregar producto</button>
+                            <span class="text-muted">Mínimo 3 productos</span>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Generar Factura</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+const categorias = ["Alimentos", "Electrónica", "Ropa", "Otros"];
+let productoCount = 0;
+const minProductos = 3;
+
+function crearProducto(index) {
+    return `
+    <div class="producto-card" data-index="${index}">
+        <div class="row align-items-end">
+            <div class="col-md-3 mb-2">
+                <label class="form-label">Nombre del producto</label>
+                <input type="text" name="producto_nombre[]" class="form-control" required>
+            </div>
+            <div class="col-md-2 mb-2">
+                <label class="form-label">Precio</label>
+                <input type="number" name="producto_precio[]" class="form-control" min="0" step="0.01" required>
+            </div>
+            <div class="col-md-2 mb-2">
+                <label class="form-label">Cantidad</label>
+                <input type="number" name="producto_cantidad[]" class="form-control" min="1" required>
+            </div>
+            <div class="col-md-3 mb-2">
+                <label class="form-label">Categoría</label>
+                <select name="producto_categoria[]" class="form-select" required>
+                    ${categorias.map(cat => `<option value="${cat}">${cat}</option>`).join('')}
+                </select>
+            </div>
+            <div class="col-md-1 mb-2 d-flex align-items-center">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="producto_iva[]" value="${index}">
+                    <label class="form-check-label">IVA</label>
+                </div>
+            </div>
+            <div class="col-md-1 mb-2 d-flex align-items-center">
+                <button type="button" class="btn btn-danger btn-sm eliminarProducto" title="Eliminar" ${index < minProductos ? 'disabled' : ''}>&times;</button>
+            </div>
+        </div>
+    </div>
+    `;
+}
+
+function actualizarBotonesEliminar() {
+    const productos = document.querySelectorAll('.producto-card');
+    productos.forEach((prod, idx) => {
+        const btn = prod.querySelector('.eliminarProducto');
+        if (btn) {
+            btn.disabled = (productos.length <= minProductos) || (idx < minProductos);
+        }
+    });
+}
+
+function agregarProducto() {
+    const productosDiv = document.getElementById('productos');
+    productosDiv.insertAdjacentHTML('beforeend', crearProducto(productoCount));
+    productoCount++;
+    actualizarBotonesEliminar();
+}
+
+document.getElementById('agregarProducto').addEventListener('click', agregarProducto);
+
+document.getElementById('productos').addEventListener('click', function(e) {
+    if (e.target.classList.contains('eliminarProducto')) {
+        e.target.closest('.producto-card').remove();
+        actualizarBotonesEliminar();
+    }
+});
+
+// Inicializar con 3 productos
+for (let i = 0; i < minProductos; i++) {
+    agregarProducto();
+}
+</script>
+</body>
+</html> 
